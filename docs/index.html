@@ -1,0 +1,376 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>petme — a pixel pet for your desktop</title>
+<meta name="description" content="petme is a pixel pet that lives on your desktop. Feed it, throw a ball for it, and grow a whole collection by earning cash just from using your computer." />
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { background: #3a2414; }
+  body {
+    font-family: ui-monospace, "SFMono-Regular", Menlo, monospace;
+    color: #efe4b3;
+    overflow-x: hidden;
+  }
+  a { color: inherit; }
+  .room {
+    position: relative;
+    min-height: 620px;
+    overflow: hidden;
+    background:
+      radial-gradient(circle at 20% 0%, rgba(255, 255, 255, 0.08), transparent 55%),
+      linear-gradient(180deg, #6b4a2c 0%, #7a5a34 55%, #8a6a3e 100%);
+    border-bottom: 6px solid #2b180c;
+  }
+  .room::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    opacity: 0.15;
+    background-image:
+      linear-gradient(rgba(0, 0, 0, 0.25) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(0, 0, 0, 0.18) 1px, transparent 1px);
+    background-size: 4px 4px;
+  }
+  .ground {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    height: 90px;
+    background: #4c3018;
+    border-top: 6px solid #2b180c;
+    box-shadow: inset 0 8px 0 rgba(255, 255, 255, 0.05);
+  }
+  .pet-canvas {
+    position: absolute;
+    bottom: 78px;
+    image-rendering: pixelated;
+    pointer-events: none;
+    filter: drop-shadow(0 6px 4px rgba(0, 0, 0, 0.35));
+  }
+  .nav {
+    position: relative;
+    z-index: 3;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 18px 28px;
+  }
+  .logo {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 15px;
+    font-weight: 900;
+    letter-spacing: 0.08em;
+    text-shadow: 2px 2px 0 #2b180c;
+  }
+  .live-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #65ffbd;
+    box-shadow: 0 0 8px #52ffb3;
+    animation: pulse 1.4s steps(2, end) infinite;
+  }
+  @keyframes pulse { 50% { opacity: 0.35; } }
+  .gh-link {
+    font-size: 11px;
+    font-weight: 800;
+    text-decoration: none;
+    padding: 7px 12px;
+    background: rgba(0, 0, 0, 0.25);
+    border: 2px solid #2b180c;
+  }
+  .hero {
+    position: relative;
+    z-index: 3;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    padding: 30px 20px 170px;
+  }
+  .window {
+    width: min(560px, 92vw);
+    background: linear-gradient(160deg, #efd18d, #dcb878);
+    border: 4px solid #4b2b16;
+    border-radius: 4px;
+    box-shadow: 0 0 0 3px #c68b43, 10px 12px 0 rgba(0, 0, 0, 0.4);
+    color: #3c2415;
+    animation: enter 220ms steps(4, end) both;
+  }
+  @keyframes enter {
+    from { opacity: 0; transform: translateY(14px) scale(0.96); }
+    to { opacity: 1; transform: translateY(0) scale(1); }
+  }
+  .titlebar {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    height: 38px;
+    padding: 0 12px;
+    background: #42ad7e;
+    border-bottom: 4px solid #315b3e;
+    box-shadow: inset 0 3px 0 rgba(181, 244, 182, 0.65);
+  }
+  .dot { width: 12px; height: 12px; border-radius: 50%; box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.4); }
+  .dot.red { background: #ff5f57; border: 1px solid #b7392e; }
+  .dot.yellow { background: #febc2e; border: 1px solid #b8860b; }
+  .dot.green { background: #28c840; border: 1px solid #1a8a2c; }
+  .titlebar .brand { margin-left: 4px; color: #eafff0; font-size: 12px; font-weight: 900; letter-spacing: 0.1em; text-shadow: 2px 2px 0 #276046; }
+  .window-body { padding: 26px 22px 30px; }
+  .window-body h1 { font-size: 34px; font-weight: 900; letter-spacing: 0.02em; }
+  .window-body p { margin-top: 10px; font-size: 13px; line-height: 1.6; font-weight: 700; color: #5a3921; }
+  .downloads { margin-top: 22px; display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 18px;
+    font-size: 12px;
+    font-weight: 900;
+    letter-spacing: 0.04em;
+    text-decoration: none;
+    border: 3px solid #1a8a2c;
+    background: #28c840;
+    color: #123f1c;
+    box-shadow: inset 0 2px 0 rgba(255, 255, 255, 0.4), 3px 4px 0 rgba(0, 0, 0, 0.35);
+  }
+  .btn.win { border-color: #315b3e; background: #42ad7e; color: #143624; }
+  .btn:hover { filter: brightness(1.08); }
+  .btn:active { transform: translate(2px, 3px); box-shadow: none; }
+  main { position: relative; background: #efd18d; color: #3c2415; }
+  .section { max-width: 1000px; margin: 0 auto; padding: 60px 24px; }
+  .section h2 { font-size: 22px; font-weight: 900; text-align: center; margin-bottom: 6px; }
+  .section .sub { text-align: center; font-size: 12px; font-weight: 700; color: #7a5a33; margin-bottom: 34px; }
+  .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 14px; }
+  .card {
+    background: #dcb878;
+    border: 3px solid #a16d38;
+    box-shadow: inset 3px 3px 0 #f3daa0, inset -3px -3px 0 #ba864c;
+    padding: 16px;
+  }
+  .card .emoji { font-size: 26px; }
+  .card h3 { margin-top: 10px; font-size: 13px; font-weight: 900; }
+  .card p { margin-top: 6px; font-size: 11px; line-height: 1.6; font-weight: 700; color: #5a3921; }
+  .shot {
+    display: block;
+    max-width: 720px;
+    width: 100%;
+    margin: 0 auto;
+    border: 4px solid #4b2b16;
+    box-shadow: 0 0 0 3px #c68b43, 7px 8px 0 rgba(43, 24, 12, 0.35);
+  }
+  .money {
+    background: #76502d;
+    border: 3px solid #4c2d19;
+    box-shadow: inset 2px 2px 0 #8d6a3e;
+    padding: 18px 20px;
+    max-width: 640px;
+    margin: 0 auto;
+    color: #fff2a5;
+  }
+  .money h3 { font-size: 13px; font-weight: 900; margin-bottom: 8px; }
+  .money p { font-size: 11px; line-height: 1.7; font-weight: 700; }
+  .money .rate { color: #65ffbd; }
+  footer {
+    background: #2b180c;
+    color: #b89a6b;
+    text-align: center;
+    padding: 26px 18px 40px;
+    font-size: 11px;
+    font-weight: 700;
+  }
+  footer a { text-decoration: underline; }
+  @media (max-width: 640px) {
+    .room { min-height: 560px; }
+    .window-body h1 { font-size: 26px; }
+  }
+</style>
+</head>
+<body>
+<div class="room" id="room">
+  <div class="nav">
+    <span class="logo"><span class="live-dot"></span>PETME</span>
+    <a class="gh-link" href="https://github.com/lothartj/petme">GITHUB ↗</a>
+  </div>
+  <div class="hero">
+    <div class="window">
+      <div class="titlebar">
+        <span class="dot red"></span>
+        <span class="dot yellow"></span>
+        <span class="dot green"></span>
+        <span class="brand">PETME // LIVE</span>
+      </div>
+      <div class="window-body">
+        <h1>petme</h1>
+        <p>A pixel pet that lives on your desktop. Feed it, throw a ball for it, pet it, and grow a whole collection by earning cash just from using your computer.</p>
+        <div class="downloads">
+          <a class="btn mac" href="https://github.com/lothartj/petme/releases/download/v1.0.0/petme-1.0.0.dmg">🍎 Download for macOS</a>
+          <a class="btn win" href="https://github.com/lothartj/petme/releases/download/v1.0.0/petme-1.0.0-setup.exe">🪟 Download for Windows</a>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="ground"></div>
+</div>
+<main>
+  <section class="section">
+    <h2>WHAT IT DOES</h2>
+    <p class="sub">it's not just a wallpaper, it actually lives there</p>
+    <div class="cards">
+      <div class="card">
+        <div class="emoji">🐕</div>
+        <h3>WALKS &amp; REACTS</h3>
+        <p>Pets idle, walk, sleep, and perk up when you type or move your mouse nearby.</p>
+      </div>
+      <div class="card">
+        <div class="emoji">⚽</div>
+        <h3>REAL BALL PHYSICS</h3>
+        <p>Drag the ball and throw it — real gravity, bounce, and rolling friction. Pets chase it and try to catch it.</p>
+      </div>
+      <div class="card">
+        <div class="emoji">❤️</div>
+        <h3>CARE &amp; PETTING</h3>
+        <p>Click a pet to pet it. Care decays slowly over time and catches up on relaunch, so don't neglect them too long.</p>
+      </div>
+      <div class="card">
+        <div class="emoji">🛍️</div>
+        <h3>THE PET POCKET</h3>
+        <p>A shop to buy new companions, choose which ones are actually out on your desktop, and resize them all.</p>
+      </div>
+    </div>
+  </section>
+  <section class="section">
+    <h2>SCREENSHOT</h2>
+    <p class="sub">the HUD, the shop, and a yard full of trouble</p>
+    <img class="shot" src="screenshot.png" alt="petme running on a desktop, showing the HUD, the Pet Pocket shop, and pets on screen" />
+  </section>
+  <section class="section">
+    <h2>HOW THE MONEY WORKS</h2>
+    <p class="sub">no ads, no accounts — just use your computer</p>
+    <div class="money">
+      <h3>$ EARNING CASH</h3>
+      <p>You earn <span class="rate">1¢ per second</span> while you're actively using your machine — moving the mouse or typing anywhere counts, not just inside petme. Go idle for 3 seconds and it pauses until you're back. Spend it in the Pet Pocket to grow your collection — prices run from about $120 to $320 per pet, deliberately expensive so it's a real goal.</p>
+    </div>
+  </section>
+  <section class="section">
+    <h2>GET IT</h2>
+    <p class="sub">unsigned builds — see the README for the one-time Gatekeeper / SmartScreen step</p>
+    <div class="downloads">
+      <a class="btn mac" href="https://github.com/lothartj/petme/releases/download/v1.0.0/petme-1.0.0.dmg">🍎 Download for macOS</a>
+      <a class="btn win" href="https://github.com/lothartj/petme/releases/download/v1.0.0/petme-1.0.0-setup.exe">🪟 Download for Windows</a>
+    </div>
+  </section>
+</main>
+<footer>
+  petme is free and open source. <a href="https://github.com/lothartj/petme">source &amp; full credits on GitHub</a>.
+</footer>
+<script>
+const FRAME_W = 192;
+const FRAME_H = 208;
+const WALK_ROW = 1;
+const WALK_FRAMES = 8;
+const OUT_W = 84;
+const OUT_H = 91;
+const pets = [
+  { src: "assets/pets/corgi.webp", speed: 34, startX: 60 },
+  { src: "assets/pets/mimi.webp", speed: 26, startX: 260 },
+  { src: "assets/pets/frankie.webp", speed: 30, startX: 460 },
+  { src: "assets/pets/wally.webp", speed: 22, startX: 660 }
+];
+function detectBounds(image) {
+  const scratch = document.createElement("canvas");
+  scratch.width = FRAME_W;
+  scratch.height = FRAME_H;
+  const sctx = scratch.getContext("2d");
+  sctx.drawImage(image, 0, 0, FRAME_W, FRAME_H, 0, 0, FRAME_W, FRAME_H);
+  const data = sctx.getImageData(0, 0, FRAME_W, FRAME_H).data;
+  let minX = FRAME_W, minY = FRAME_H, maxX = 0, maxY = 0;
+  for (let y = 0; y < FRAME_H; y++) {
+    for (let x = 0; x < FRAME_W; x++) {
+      const alpha = data[(y * FRAME_W + x) * 4 + 3];
+      if (alpha <= 10) continue;
+      if (x < minX) minX = x;
+      if (x > maxX) maxX = x;
+      if (y < minY) minY = y;
+      if (y > maxY) maxY = y;
+    }
+  }
+  const margin = 12;
+  const sx = Math.max(0, minX - margin);
+  const sy = Math.max(0, minY - margin);
+  const ex = Math.min(FRAME_W, maxX + margin);
+  const ey = Math.min(FRAME_H, maxY + margin);
+  return { sx, sy, sw: ex - sx, sh: ey - sy };
+}
+function setupPet(config, room) {
+  const canvas = document.createElement("canvas");
+  canvas.className = "pet-canvas";
+  canvas.width = OUT_W;
+  canvas.height = OUT_H;
+  room.appendChild(canvas);
+  const ctx = canvas.getContext("2d");
+  ctx.imageSmoothingEnabled = false;
+  const image = new Image();
+  const state = { x: config.startX, dir: 1, bounds: null, frame: 0 };
+  image.addEventListener("load", () => {
+    state.bounds = detectBounds(image);
+  });
+  image.src = config.src;
+  function draw() {
+    if (!state.bounds) return;
+    ctx.clearRect(0, 0, OUT_W, OUT_H);
+    ctx.save();
+    if (state.dir === -1) {
+      ctx.translate(OUT_W, 0);
+      ctx.scale(-1, 1);
+    }
+    const b = state.bounds;
+    const scale = Math.min(OUT_W / b.sw, OUT_H / b.sh);
+    const dw = b.sw * scale;
+    const dh = b.sh * scale;
+    const dx = (OUT_W - dw) / 2;
+    const dy = OUT_H - dh;
+    const column = Math.floor(state.frame) % WALK_FRAMES;
+    ctx.drawImage(
+      image,
+      column * FRAME_W + b.sx,
+      WALK_ROW * FRAME_H + b.sy,
+      b.sw,
+      b.sh,
+      dx,
+      dy,
+      dw,
+      dh
+    );
+    ctx.restore();
+  }
+  function tick(dtMs) {
+    state.frame += dtMs / 130;
+    const width = room.clientWidth;
+    state.x += (state.dir * config.speed * dtMs) / 1000;
+    if (state.x < 10) { state.x = 10; state.dir = 1; }
+    if (state.x > width - OUT_W - 10) { state.x = width - OUT_W - 10; state.dir = -1; }
+    canvas.style.left = state.x + "px";
+    draw();
+  }
+  return tick;
+}
+const room = document.getElementById("room");
+const walkers = pets.map((config) => setupPet(config, room));
+let last = performance.now();
+function loop(now) {
+  const dt = Math.min(50, now - last);
+  last = now;
+  for (const tick of walkers) tick(dt);
+  requestAnimationFrame(loop);
+}
+requestAnimationFrame(loop);
+</script>
+</body>
+</html>
