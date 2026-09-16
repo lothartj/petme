@@ -40,7 +40,9 @@ No window opens in the traditional sense — petme is a transparent full-screen 
 
 Use the download buttons at the top of this page, or grab either file from the [latest release](https://github.com/lothartj/petme/releases/latest) directly. Both are unsigned, so:
 
-- **macOS**: the `.dmg` is ad-hoc signed with whatever developer identity built it, not a proper Developer ID for public distribution, so Gatekeeper will refuse to open it on first try — right-click the app → **Open**, then confirm in the dialog that appears. You only need to do this once.
+- **macOS**: the `.dmg` is ad-hoc signed with whatever developer identity built it, not a proper Developer ID for public distribution, so Gatekeeper will block it on first try with a **"petme" Not Opened** dialog. Recent macOS versions removed the old right-click-to-open bypass, so use one of these instead:
+  - **System Settings**: open System Settings → Privacy & Security → scroll down to the Security section → you'll see a note that petme was blocked → click **Open Anyway** → confirm with your password/Touch ID → try opening the app again (one more confirmation, then it's done for good).
+  - **Terminal** (faster, works on every macOS version): `xattr -cr /Applications/petme.app`, then open it normally.
 - **Windows**: the `-setup.exe` has no code-signing certificate, so SmartScreen will similarly warn about an unrecognized publisher on first run — click **More info → Run anyway**.
 
 ## Building the installers yourself
