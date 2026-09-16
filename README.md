@@ -2,6 +2,9 @@
 
 A pixel pet that lives on your desktop. It walks around, follows a ball you throw at it, needs feeding and attention, and you can grow a whole collection of them by earning in-app cash just from using your computer normally.
 
+[![Download for macOS](https://img.shields.io/badge/Download-macOS-000000?style=for-the-badge&logo=apple&logoColor=white)](https://github.com/lothartj/petme/releases/download/v1.0.0/petme-1.0.0.dmg)
+[![Download for Windows](https://img.shields.io/badge/Download-Windows-0078D6?style=for-the-badge&logo=windows&logoColor=white)](https://github.com/lothartj/petme/releases/download/v1.0.0/petme-1.0.0-setup.exe)
+
 ![petme running on a desktop, showing the HUD, the Pet Pocket shop, and pets on screen](docs/screenshot.png)
 
 ## What it actually does
@@ -35,10 +38,10 @@ No window opens in the traditional sense — petme is a transparent full-screen 
 
 ## Installing a built copy
 
-Prebuilt, unsigned installers live in `dist/` after running a build (see below) — download and run:
+Use the download buttons at the top of this page, or grab either file from the [latest release](https://github.com/lothartj/petme/releases/latest) directly. Both are unsigned, so:
 
-- **macOS**: `petme-<version>.dmg`. It's ad-hoc signed with whatever developer identity is on the building machine, not a proper Developer ID for public distribution, so Gatekeeper will still refuse to open it on first try for anyone else — right-click the app → **Open**, then confirm in the dialog that appears. You only need to do this once.
-- **Windows**: `petme-<version>-setup.exe`. Windows SmartScreen may similarly warn about an unrecognized publisher on first run — click **More info → Run anyway**.
+- **macOS**: the `.dmg` is ad-hoc signed with whatever developer identity built it, not a proper Developer ID for public distribution, so Gatekeeper will refuse to open it on first try — right-click the app → **Open**, then confirm in the dialog that appears. You only need to do this once.
+- **Windows**: the `-setup.exe` has no code-signing certificate, so SmartScreen will similarly warn about an unrecognized publisher on first run — click **More info → Run anyway**.
 
 ## Building the installers yourself
 
