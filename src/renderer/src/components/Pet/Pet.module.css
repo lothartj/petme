@@ -1,0 +1,31 @@
+.wrapper {
+  position: absolute;
+}
+
+.canvas {
+  image-rendering: pixelated;
+  pointer-events: auto;
+  cursor: pointer;
+}
+
+.heart {
+  position: absolute;
+  top: -10px;
+  left: 50%;
+  font-size: 30px;
+  color: #e8768a;
+  text-shadow: 0 0 6px rgba(232, 118, 138, 0.6);
+  animation: float-up 1100ms ease-out forwards;
+  pointer-events: none;
+}
+
+@keyframes float-up {
+  from {
+    opacity: 1;
+    transform: translate(-50%, 0) scale(0.5) rotate(0deg);
+  }
+  to {
+    opacity: 0;
+    transform: translate(-50%, -46px) scale(1.4) rotate(12deg);
+  }
+}

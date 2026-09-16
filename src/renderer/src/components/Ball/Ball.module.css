@@ -1,0 +1,12 @@
+.ball {
+  position: absolute;
+  line-height: 1;
+  filter: drop-shadow(0 4px 5px rgba(0, 0, 0, 0.35));
+  animation: ball-spin 420ms linear infinite;
+}
+
+@keyframes ball-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}

@@ -1,0 +1,5 @@
+.canvas {
+  position: absolute;
+  image-rendering: pixelated;
+  pointer-events: none;
+}
