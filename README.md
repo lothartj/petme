@@ -38,22 +38,29 @@ No window opens in the traditional sense — petme is a transparent full-screen 
 
 ## Installing a built copy
 
-Use the download buttons at the top of this page, or grab either file from the [latest release](https://github.com/lothartj/petme/releases/latest) directly. Both are unsigned, so:
+Use the download buttons at the top of this page, or grab either file from the [latest release](https://github.com/lothartj/petme/releases/latest) directly.
 
-- **macOS**: the `.dmg` is ad-hoc signed with whatever developer identity built it, not a proper Developer ID for public distribution, so Gatekeeper will block it on first try with a **"petme" Not Opened** dialog. Recent macOS versions removed the old right-click-to-open bypass, so use one of these instead:
-  - **System Settings**: open System Settings → Privacy & Security → scroll down to the Security section → you'll see a note that petme was blocked → click **Open Anyway** → confirm with your password/Touch ID → try opening the app again (one more confirmation, then it's done for good).
-  - **Terminal** (faster, works on every macOS version): `xattr -cr /Applications/petme.app`, then open it normally.
-- **Windows**: the `-setup.exe` has no code-signing certificate, so SmartScreen will similarly warn about an unrecognized publisher on first run — click **More info → Run anyway**.
+- **macOS**: the `.dmg` is signed with a Developer ID and notarized by Apple, so it opens cleanly with no Gatekeeper warning.
+- **Windows**: the `-setup.exe` has no code-signing certificate, so SmartScreen will warn about an unrecognized publisher on first run — click **More info → Run anyway**.
 
 ## Building the installers yourself
 
 ```bash
-npm run build:mac    # -> dist/petme-<version>.dmg
-npm run build:win    # -> dist/petme-<version>-setup.exe
+npm run build:mac    # -> dist/petme-<version>.dmg (signed + notarized, if Apple credentials are set)
+npm run build:win    # -> dist/petme-<version>-setup.exe (unsigned)
 npm run build:linux  # -> dist/petme-<version>.AppImage (and .deb/.snap)
 ```
 
-These are unsigned builds (no Apple Developer ID or Windows code-signing certificate is configured) — fine for sharing with friends, but expect the Gatekeeper/SmartScreen prompts described above. `build:win` works from macOS without needing Wine installed.
+`build:win` works from macOS without needing Wine installed. `build:mac` signs and notarizes automatically if a `Developer ID Application` certificate is in your keychain and these environment variables are set (a local `.env` file works — it's gitignored and never committed):
+
+```bash
+APPLE_ID=you@example.com
+APPLE_APP_SPECIFIC_PASSWORD=xxxx-xxxx-xxxx-xxxx   # generate at appleid.apple.com
+APPLE_TEAM_ID=YOUR_TEAM_ID                          # from developer.apple.com/account
+CSC_NAME=Your Name (YOUR_TEAM_ID)                   # matches the cert's common name
+```
+
+Without those, `build:mac` still produces a working `.dmg` — it just falls back to ad-hoc signing, which will trigger a one-time Gatekeeper warning on other people's Macs (right-click isn't enough on recent macOS; use System Settings → Privacy & Security → **Open Anyway**, or run `xattr -cr` on the installed app).
 
 ## Architecture, for anyone poking at the code
 
